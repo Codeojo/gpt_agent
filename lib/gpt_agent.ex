@@ -57,7 +57,7 @@ defmodule GptAgent do
   @callback start_link(t()) :: Types.result(pid(), term())
   @callback connect(connect_opts()) :: Types.result(pid(), :invalid_thread_id)
   @callback shutdown(pid()) :: Types.result({:process_not_alive, pid()})
-  @callback add_user_message(pid(), Types.nonblank_string()) ::
+  @callback add_user_message(pid(), Types.nonblank_string() | Types.user_message()) ::
               Types.result(:run_in_progress | {:process_not_alive, pid()})
   @callback submit_tool_output(pid(), Types.tool_name(), Types.tool_output()) ::
               Types.result(:invalid_tool_call_id | {:process_not_alive, pid()})
@@ -768,9 +768,17 @@ defmodule GptAgent do
     end
 
     @impl true
-    def add_user_message(pid, message) do
+    def add_user_message(pid, message) when is_binary(message) do
       if Process.alive?(pid) do
         GenServer.cast(pid, {:add_user_message, %UserMessage{content: message}})
+      else
+        handle_dead_process(pid)
+      end
+    end
+
+    def add_user_message(pid, %UserMessage{} = message) do
+      if Process.alive?(pid) do
+        GenServer.cast(pid, {:add_user_message, message})
       else
         handle_dead_process(pid)
       end
