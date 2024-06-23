@@ -53,7 +53,7 @@ defmodule GptAgent do
           | {:assistant_id, Types.assistant_id()}
   @type connect_opts() :: list(connect_opt())
 
-  @callback create_thread() :: {:ok, Types.thread_id()}
+  @callback create_thread(map() :: {:ok, Types.thread_id()}
   @callback start_link(t()) :: Types.result(pid(), term())
   @callback connect(connect_opts()) :: Types.result(pid(), :invalid_thread_id)
   @callback shutdown(pid()) :: Types.result({:process_not_alive, pid()})
@@ -605,7 +605,7 @@ defmodule GptAgent do
     defp ok(data), do: {:ok, data}
 
     @impl true
-    def create_thread(json \\ "") do
+    def create_thread(json \\ %{}) do
       log("Creating thread")
 
       {:ok, %{body: %{"id" => thread_id, "object" => "thread"}}} =
